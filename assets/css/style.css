@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+
+body { 
+    background-color: #0b0f1a; 
+    color: #e2e8f0; 
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
+}
+
+/* Glassmorphism Effect */
+.glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    background: #0f172a;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mobile Sidebar States */
+@media (max-width: 1024px) {
+    .sidebar-closed { transform: translateX(-100%); }
+    .sidebar-open { transform: translateX(0); }
+}
+
+/* Form Inputs Customization */
+input, select, textarea {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    transition: border-color 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #3b82f6 !important;
+    outline: none;
+}
+
+/* Table Hover Effect */
+#jobTableBody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Navigation Links */
+.nav-link:hover { 
+    background: rgba(59, 130, 246, 0.1); 
+    color: #3b82f6; 
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0b0f1a; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #334155; }
+

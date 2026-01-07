@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thaprobaane ERP | Secure Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="assets/img/logo.png">
+    <style>
+        body {
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-login {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .input-glow:focus {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="glass-login w-full max-w-md p-8 rounded-3xl shadow-2xl">
+        <div class="text-center mb-10">
+            <img src="assets/img/logo.png" alt="Logo" class="h-16 mx-auto mb-4">
+            <h1 class="text-2xl font-bold text-white tracking-tight">Welcome Back</h1>
+            <p class="text-gray-400 text-sm mt-2">Log in to manage your ERP system</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase mb-2 ml-1">Username</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" id="username" class="w-full bg-slate-800/50 border border-white/10 text-white pl-11 pr-4 py-3 rounded-xl outline-none transition-all input-glow" placeholder="Enter username" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase mb-2 ml-1">Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500">
+                        <i class="fa-solid fa-lock"></i>
+                    </span>
+                    <input type="password" id="password" class="w-full bg-slate-800/50 border border-white/10 text-white pl-11 pr-4 py-3 rounded-xl outline-none transition-all input-glow" placeholder="Enter password" required>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between px-1">
+                <label class="flex items-center text-sm text-gray-400 cursor-pointer">
+                    <input type="checkbox" class="rounded border-white/10 bg-slate-800 text-blue-600 mr-2"> Remember me
+                </label>
+                <a href="#" class="text-sm text-blue-400 hover:text-blue-300">Forgot?</a>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-600/20">
+                SIGN IN
+            </button>
+        </form>
+
+        <p class="text-center text-gray-500 text-xs mt-8">
+            &copy; 2026 Thaprobaane International. All rights reserved.
+        </p>
+    </div>
+
+    <script type="module">
+      // Firebase Libraries Import කිරීම
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+      
+      // Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyAgI86HrgB1AidP6Pbm6buMOTFKzNzrREM",
+        authDomain: "thaprobaane-erp.firebaseapp.com",
+        projectId: "thaprobaane-erp",
+        storageBucket: "thaprobaane-erp.firebasestorage.app",
+        messagingSenderId: "543906827250",
+        appId: "1:543906827250:web:ebaeff4bd03d1323f9f96b",
+        databaseURL: "https://thaprobaane-erp-default-rtdb.firebaseio.com"
+      };
+
+      // Firebase Initialize කිරීම
+      const app = initializeApp(firebaseConfig);
+      const dbRef = ref(getDatabase(app));
+
+      document.getElementById('loginForm').onsubmit = (e) => {
+          e.preventDefault();
+          const userField = document.getElementById('username').value;
+          const passField = document.getElementById('password').value;
+
+          // Firebase Database එකේ තියෙන 'admin' node එක ඇතුළත දත්ත පරීක්ෂා කිරීම
+          get(child(dbRef, `admin`)).then((snapshot) => {
+              if (snapshot.exists()) {
+                  const data = snapshot.val();
+                  
+                  // Database එකේ තියෙන username සහ password සමඟ සසඳා බැලීම
+                  if (userField === data.username && String(passField) === String(data.password)) {
+                      window.location.href = 'dashboard.html';
+                  } else {
+                      alert('වැරදි නමක් හෝ මුරපදයක්!');
+                  }
+              } else {
+                  alert('දත්ත පද්ධතියේ Admin විස්තර සොයාගත නොහැක!');
+              }
+          }).catch((error) => {
+              console.error(error);
+              alert('Database එකට සම්බන්ධ වීමේ දෝෂයක්! කරුණාකර ඉන්ටර්නෙට් සම්බන්ධතාවය පරීක්ෂා කරන්න.');
+          });
+      };
+    </script>
+</body>
+</html>
