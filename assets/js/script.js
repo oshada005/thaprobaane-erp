@@ -1,13 +1,17 @@
 /**
  * Thaprobaane ERP - Cloud Version (Firebase)
- * Final Build for Oshada - Payment Toggle Fixed
+ * Final Build with Pagination (15 Rows Per Page)
  */
 
 let jobs = [];
 let pieChart, barChart;
 let editId = null;
 
-// 1. Dashboard එකේ දත්ත සහ Table එක Update කිරීම
+// Pagination Variables
+let currentPage = 1;
+const rowsPerPage = 15;
+
+// 1. Dashboard සහ Table එක Update කිරීම (Pagination සමඟ)
 function updateDashboard(data) {
     let totalIncome = 0, paidIncome = 0, totalExpense = 0;
     let singer = 0, bank = 0, privateVal = 0;
@@ -18,24 +22,34 @@ function updateDashboard(data) {
 
     // Firebase දත්ත Array එකකට හරවමු
     jobs = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
-
-    jobs.slice().reverse().forEach((job) => {
+    
+    // දත්ත වල මුළු එකතුව ගණනය කිරීම (Pagination එකට කලින්)
+    jobs.forEach((job) => {
         const price = parseFloat(job.price) || 0;
-
         if (job.type === 'Income') {
             totalIncome += price;
             if (job.status === 'Paid') paidIncome += price;
-            
             if (job.source === 'Singer') singer += price;
             else if (job.source === 'Banks') bank += price;
             else privateVal += price;
         } else {
             totalExpense += price;
         }
+    });
 
+    // Pagination Logic
+    const reversedJobs = [...jobs].reverse();
+    const totalPages = Math.ceil(reversedJobs.length / rowsPerPage) || 1;
+    
+    // වත්මන් පිටුවට අදාළ දත්ත කොටස පමණක් වෙන් කර ගැනීම
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const paginatedJobs = reversedJobs.slice(startIndex, startIndex + rowsPerPage);
+
+    // Table එකට දත්ත ඇතුළත් කිරීම
+    paginatedJobs.forEach((job) => {
+        const price = parseFloat(job.price) || 0;
         let sourceColor = job.source === 'Singer' ? 'bg-red-600' : (job.source === 'Banks' ? 'bg-blue-600' : 'bg-emerald-600');
 
-        // Status Badge එක සහ Button එක මෙතනින් හදන්නේ
         const statusBadge = job.status === 'Paid' ? 
             `<span class="px-3 py-1 rounded-full text-[9px] font-bold bg-green-500/20 text-green-400 border border-green-500/20"><i class="fa-solid fa-check-double mr-1"></i> PAID</span>` : 
             `<button onclick="markAsPaid('${job.id}')" class="px-3 py-1 rounded-full text-[9px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/20 hover:bg-green-500 hover:text-white transition-all shadow-lg"><i class="fa-solid fa-clock mr-1"></i> PENDING</button>`;
@@ -54,6 +68,12 @@ function updateDashboard(data) {
             </tr>`;
     });
 
+    // Pagination UI Update
+    document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPages;
+
+    // Stats Cards & Charts Update
     let netProfit = paidIncome - totalExpense;
     document.getElementById('totalIncome').innerText = `Rs. ${totalIncome.toLocaleString()}`;
     document.getElementById('totalExpenses').innerText = `Rs. ${totalExpense.toLocaleString()}`;
@@ -62,6 +82,21 @@ function updateDashboard(data) {
 
     if(pieChart) { pieChart.data.datasets[0].data = [singer, bank, privateVal]; pieChart.update(); }
     if(barChart) { barChart.data.datasets[0].data[1] = netProfit; barChart.update(); }
+}
+
+// Pagination Button Click Events
+document.getElementById('prevPage').onclick = () => { if (currentPage > 1) { currentPage--; updateDashboardFromData(); } };
+document.getElementById('nextPage').onclick = () => { const totalPages = Math.ceil(jobs.length / rowsPerPage); if (currentPage < totalPages) { currentPage++; updateDashboardFromData(); } };
+
+// Helper function to re-render using existing data
+function updateDashboardFromData() {
+    // Firebase එකෙන් ආපහු data ගන්නෙ නැතුව දැනට තියෙන array එකෙන් render කරයි
+    const rawData = jobs.reduce((obj, item) => {
+        const {id, ...rest} = item;
+        obj[id] = rest;
+        return obj;
+    }, {});
+    updateDashboard(rawData);
 }
 
 // 2. දත්ත පද්ධතිය ආරම්භයේදී දත්ත කියවීම
@@ -74,29 +109,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// 3. Payment එක "Paid" ලෙස Update කරන Function එක (මෙන්න මේක තමයි අලුතින් හැදුවේ)
+// 3. Payment Status Update (Toast Alert සමඟ)
 window.markAsPaid = (id) => {
     if (!window.dbFunctions) return;
     const { update, ref, db } = window.dbFunctions;
-    
     Swal.fire({
-        title: 'Payment එක ලැබුනා ද?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        cancelButtonColor: '#334155',
-        confirmButtonText: 'ඔව්, ලැබුනා!',
-        background: '#1e293b',
-        color: '#fff'
+        title: 'Receive Payment?', icon: 'question', showCancelButton: true,
+        confirmButtonColor: '#10b981', cancelButtonColor: '#334155', confirmButtonText: 'Yes, Received!',
+        background: '#1e293b', color: '#fff'
     }).then((result) => {
         if (result.isConfirmed) {
             update(ref(db, 'jobs/' + id), { status: 'Paid' });
-            Swal.fire({ title: 'Updated!', icon: 'success', timer: 1500, showConfirmButton: false });
+            showToast('Status: PAID', 'success');
         }
     });
 };
 
-// 4. දත්ත සේව් කිරීම
+// 4. දත්ත සේව් කිරීම (Toast Alert සමඟ)
 document.getElementById('jobForm').onsubmit = (e) => {
     e.preventDefault();
     if (!window.dbFunctions) return;
@@ -115,18 +144,35 @@ document.getElementById('jobForm').onsubmit = (e) => {
         update(ref(db, 'jobs/' + editId), entry);
         editId = null;
         document.getElementById('formTitle').innerHTML = 'Quick Entry';
+        showToast('Transaction Updated!', 'success');
     } else {
         push(window.dbRef, entry);
+        showToast('Transaction Added!', 'success');
     }
     e.target.reset();
 };
+
+// Toast Helper Function
+function showToast(title, icon) {
+    Swal.fire({
+        toast: true, position: 'top-end', icon: icon, title: title,
+        showConfirmButton: false, timer: 3000, timerProgressBar: true,
+        background: '#1e293b', color: '#fff'
+    });
+}
 
 // 5. Delete Logic
 window.deleteJob = (id) => {
     if (!window.dbFunctions) return;
     const { remove, ref, db } = window.dbFunctions;
-    Swal.fire({ title: 'මකන්නද?', icon: 'warning', showCancelButton: true }).then((result) => {
-        if (result.isConfirmed) remove(ref(db, 'jobs/' + id));
+    Swal.fire({ 
+        title: 'Delete this?', icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#ef4444', cancelButtonColor: '#334155', confirmButtonText: 'Yes, Delete!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            remove(ref(db, 'jobs/' + id));
+            showToast('Transaction Deleted', 'info');
+        }
     });
 };
 
@@ -144,7 +190,7 @@ window.editJob = (id) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// Charts Setup
+// 7. Charts Setup
 function setupCharts() {
     const pieCtx = document.getElementById('incomeSourcesChart');
     const barCtx = document.getElementById('incomeExpensesChart');
@@ -154,13 +200,13 @@ function setupCharts() {
     barChart = new Chart(barCtx, { type: 'bar', data: { labels: ['Target', 'Profit'], datasets: [{ label: 'LKR', data: [200000, 0], backgroundColor: ['#334155', '#10b981'], borderRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } } });
 }
 
-// 7. Excel Export (මෙතනින් තමයි Excel එක හදන්නේ)
+// 8. Excel Export
 document.getElementById('exportBtnSidebar').onclick = function() {
     if (jobs.length === 0) {
-        Swal.fire('Data Empty', 'Download කිරීමට දත්ත නැත!', 'warning');
+        showToast('No data available to download!', 'error');
         return;
     }
-    const excelData = jobs.map(j => ({ "Date": j.date, "source": j.source, "Type": j.type, "Description": j.description, "Amount": parseFloat(j.price), "Status": j.status }));
+    const excelData = jobs.map(j => ({ "Date": j.date, "Source": j.source, "Type": j.type, "Description": j.description, "Amount": parseFloat(j.price), "Status": j.status }));
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
