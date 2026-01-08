@@ -1,22 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Visualizer | Thaprobaane International</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="assets/css/style.css" />
     <link rel="icon" href="assets/img/logo.png" />
-  </head>
-  <body>
- 
+    <style>
+        .visualizer-container {
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        #visualizer-stage img {
+            max-width: 100%;
+            max-height: 450px;
+            object-fit: contain;
+            transition: opacity 0.8s ease-in-out;
+        }
+    </style>
+</head>
+<body class="visualizer-container text-white">
+
+    <nav class="p-6 border-b border-white/5 flex justify-between items-center bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="flex items-center space-x-4">
+            <img src="assets/img/logo.png" alt="Logo" class="w-10 h-auto">
+            <h1 class="text-xl font-bold tracking-tight">3D Furniture Visualizer</h1>
+        </div>
+        <a href="dashboard.html" class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition text-sm">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
+        </a>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="relative bg-black/20 rounded-3xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center p-10" style="min-height: 500px;">
+                <div id="visualizer-stage" class="w-full flex items-center justify-center">
+                    <img id="base-sofa" src="" alt="Sofa Preview" class="opacity-0">
+                </div>
+                <div class="absolute bottom-6 right-6 flex space-x-3">
+                    <button class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition"><i class="fa-solid fa-plus"></i></button>
+                    <button class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+            </div>
+
+            <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                <h2 class="text-lg font-bold mb-1">Modern Luxury L-Shape Sofa</h2>
+                <p class="text-gray-400 text-sm">Thaprobaane International - Custom Design Preview</p>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 shadow-xl">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4 italic">Step 1: Body Color</h3>
+                <div class="grid grid-cols-4 gap-3" id="body-colors"></div>
+            </div>
+
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 shadow-xl">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-4 italic">Step 2: Cushion Color</h3>
+                <div class="grid grid-cols-4 gap-3" id="cushion-colors"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button class="p-4 bg-slate-800 hover:bg-slate-700 rounded-2xl transition font-bold text-xs">
+                    <i class="fa-solid fa-camera mb-2 block text-lg text-blue-400"></i> Screenshot
+                </button>
+                <button class="p-4 bg-blue-600 hover:bg-blue-500 rounded-2xl transition font-bold text-xs">
+                    <i class="fa-solid fa-file-invoice-dollar mb-2 block text-lg"></i> Get Quote
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="assets/js/visualizer.js"></script>
-  </body>
+</body>
 </html>
