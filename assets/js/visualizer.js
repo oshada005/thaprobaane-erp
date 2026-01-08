@@ -67,3 +67,13 @@ function resetVisualizer() {
         console.log("Visualizer Reset to Default");
     }
 }
+function applyColor(mat, section) {
+    // තෝරගත් කොටසට (Body හෝ Cushion) අදාළ ID එක ගන්නවා
+    const targetId = section === 'body' ? 'layer-body' : 'layer-cushions';
+    const element = document.getElementById(targetId);
+    
+    if (element) {
+        // රෙද්ද තියෙන තැනට විතරක් පාට ඇප්ලයි කරනවා
+        element.style.backgroundColor = mat.hex;
+    }
+}
