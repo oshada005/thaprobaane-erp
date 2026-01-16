@@ -1,72 +1,29 @@
 /**
- * Thaprobaane ERP - Script Logic
- * Syncs Firebase data with Table & Charts
+ * Thaprobaane ERP - Cloud Version (Firebase)
+ * Final Build with Pagination (15 Rows Per Page)
  */
 
 let jobs = [];
 let pieChart, barChart;
+let editId = null;
+
+// Pagination Variables
 let currentPage = 1;
 const rowsPerPage = 15;
 
-// 1. Setup Charts
-function setupCharts() {
-    const pieCtx = document.getElementById('incomeSourcesChart');
-    const barCtx = document.getElementById('incomeExpensesChart');
-    
-    if (pieCtx) {
-        pieChart = new Chart(pieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Singer', 'Banks', 'Private'],
-                datasets: [{
-                    data: [0, 0, 0],
-                    backgroundColor: ['#ef4444', '#3b82f6', '#10b981'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } }
-            }
-        });
-    }
-
-    if (barCtx) {
-        barChart = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Total Income', 'Total Expenses'],
-                datasets: [{
-                    label: 'LKR',
-                    data: [0, 0],
-                    backgroundColor: ['#3b82f6', '#ef4444'],
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { grid: { color: '#ffffff05' }, ticks: { color: '#64748b', font: { size: 10 } } },
-                    x: { ticks: { color: '#64748b', font: { size: 10 } } }
-                }
-            }
-        });
-    }
-}
-
-// 2. Update Everything
+// 1. Dashboard සහ Table එක Update කිරීම (Pagination සමඟ)
 function updateDashboard(data) {
+    let totalIncome = 0, paidIncome = 0, totalExpense = 0;
+    let singer = 0, bank = 0, privateVal = 0;
+
     const tableBody = document.getElementById('jobTableBody');
     if (!tableBody) return;
     tableBody.innerHTML = '';
 
+    // Firebase දත්ත Array එකකට හරවමු
     jobs = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
     
-    let totalIncome = 0, totalExpense = 0, paidIncome = 0;
-    let singer = 0, bank = 0, privateVal = 0;
-
+    // දත්ත වල මුළු එකතුව ගණනය කිරීම (Pagination එකට කලින්)
     jobs.forEach((job) => {
         const price = parseFloat(job.price) || 0;
         if (job.type === 'Income') {
@@ -80,85 +37,100 @@ function updateDashboard(data) {
         }
     });
 
-    // Pagination
+    // Pagination Logic
     const reversedJobs = [...jobs].reverse();
     const totalPages = Math.ceil(reversedJobs.length / rowsPerPage) || 1;
-    const paginatedJobs = reversedJobs.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+    
+    // වත්මන් පිටුවට අදාළ දත්ත කොටස පමණක් වෙන් කර ගැනීම
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const paginatedJobs = reversedJobs.slice(startIndex, startIndex + rowsPerPage);
 
+    // Table එකට දත්ත ඇතුළත් කිරීම
     paginatedJobs.forEach((job) => {
         const price = parseFloat(job.price) || 0;
         let sourceColor = job.source === 'Singer' ? 'bg-red-600' : (job.source === 'Banks' ? 'bg-blue-600' : 'bg-emerald-600');
+
         const statusBadge = job.status === 'Paid' ? 
-            `<span class="px-3 py-1 rounded-full text-[9px] font-bold bg-green-500/20 text-green-400 border border-green-500/20">PAID</span>` : 
-            `<button onclick="markAsPaid('${job.id}')" class="px-3 py-1 rounded-full text-[9px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/20 hover:bg-green-500 hover:text-white transition">PENDING</button>`;
+            `<span class="px-3 py-1 rounded-full text-[9px] font-bold bg-green-500/20 text-green-400 border border-green-500/20"><i class="fa-solid fa-check-double mr-1"></i> PAID</span>` : 
+            `<button onclick="markAsPaid('${job.id}')" class="px-3 py-1 rounded-full text-[9px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/20 hover:bg-green-500 hover:text-white transition-all shadow-lg"><i class="fa-solid fa-clock mr-1"></i> PENDING</button>`;
 
         tableBody.innerHTML += `
-            <tr class="hover:bg-white/5 border-b border-white/5 transition">
-                <td class="p-4 text-xs">${job.date}</td>
-                <td class="p-4"><span class="px-2 py-1 rounded text-[9px] ${sourceColor} text-white font-black">${job.source}</span></td>
-                <td class="p-4 text-xs text-gray-400">${job.description}</td>
+            <tr class="hover:bg-white/5 transition border-b border-white/5 text-sm text-gray-300">
+                <td class="p-4 text-gray-500">${job.date}</td>
+                <td class="p-4"><span class="px-2 py-1 rounded text-[10px] ${sourceColor} text-white font-bold uppercase">${job.source}</span></td>
+                <td class="p-4">${job.description}</td>
                 <td class="p-4 font-bold text-right ${job.type === 'Income' ? 'text-green-400' : 'text-red-400'}">Rs. ${price.toLocaleString()}</td>
                 <td class="p-4 text-center">${statusBadge}</td>
-                <td class="p-4 text-center">
-                    <button onclick="prepareEditModal('${job.id}')" class="text-blue-400 mr-2"><i class="fa-solid fa-pen-to-square"></i></button>
-                    <button onclick="deleteJob('${job.id}')" class="text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+                <td class="p-4 text-center space-x-3">
+                    <button onclick="editJob('${job.id}')" class="text-blue-400 hover:text-blue-200"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button onclick="deleteJob('${job.id}')" class="text-red-500 hover:text-red-300"><i class="fa-solid fa-trash-can"></i></button>
                 </td>
             </tr>`;
     });
 
-    // Cards Update
+    // Pagination UI Update
+    document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPages;
+
+    // Stats Cards & Charts Update
+    let netProfit = paidIncome - totalExpense;
     document.getElementById('totalIncome').innerText = `Rs. ${totalIncome.toLocaleString()}`;
     document.getElementById('totalExpenses').innerText = `Rs. ${totalExpense.toLocaleString()}`;
-    document.getElementById('netProfit').innerText = `Rs. ${(paidIncome - totalExpense).toLocaleString()}`;
+    document.getElementById('netProfit').innerText = `Rs. ${netProfit.toLocaleString()}`;
     document.getElementById('jobCount').innerText = jobs.length;
 
-    // Charts Update
-    if (pieChart) { pieChart.data.datasets[0].data = [singer, bank, privateVal]; pieChart.update(); }
-    if (barChart) { barChart.data.datasets[0].data = [totalIncome, totalExpense]; barChart.update(); }
-
-    document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
-    document.getElementById('prevPage').disabled = (currentPage === 1);
-    document.getElementById('nextPage').disabled = (currentPage === totalPages);
+    if(pieChart) { pieChart.data.datasets[0].data = [singer, bank, privateVal]; pieChart.update(); }
+    if(barChart) { barChart.data.datasets[0].data[1] = netProfit; barChart.update(); }
 }
 
-// Global modal function
-window.prepareEditModal = (id) => {
-    const job = jobs.find(j => j.id === id);
-    if (!job) return;
-    document.getElementById('editJobId').value = id;
-    document.getElementById('txDate').value = job.date;
-    document.getElementById('txSource').value = job.source;
-    document.getElementById('txDesc').value = job.description;
-    document.getElementById('txAmount').value = job.price;
-    document.getElementById('txStatus').value = job.status;
+// Pagination Button Click Events
+document.getElementById('prevPage').onclick = () => { if (currentPage > 1) { currentPage--; updateDashboardFromData(); } };
+document.getElementById('nextPage').onclick = () => { const totalPages = Math.ceil(jobs.length / rowsPerPage); if (currentPage < totalPages) { currentPage++; updateDashboardFromData(); } };
 
-    const modal = document.getElementById('transactionModal');
-    const box = document.getElementById('modalBox');
-    modal.classList.remove('hidden'); modal.classList.add('flex');
-    setTimeout(() => box.classList.replace('scale-95', 'scale-100'), 10);
-};
+// Helper function to re-render using existing data
+function updateDashboardFromData() {
+    // Firebase එකෙන් ආපහු data ගන්නෙ නැතුව දැනට තියෙන array එකෙන් render කරයි
+    const rawData = jobs.reduce((obj, item) => {
+        const {id, ...rest} = item;
+        obj[id] = rest;
+        return obj;
+    }, {});
+    updateDashboard(rawData);
+}
 
-document.getElementById('updateTxForm').onsubmit = function(e) {
-    e.preventDefault();
+// 2. දත්ත පද්ධතිය ආරම්භයේදී දත්ත කියවීම
+document.addEventListener('DOMContentLoaded', () => {
+    setupCharts();
+    if (window.dbFunctions) {
+        window.dbFunctions.onValue(window.dbRef, (snapshot) => {
+            updateDashboard(snapshot.val());
+        });
+    }
+});
+
+// 3. Payment Status Update (Toast Alert සමඟ)
+window.markAsPaid = (id) => {
+    if (!window.dbFunctions) return;
     const { update, ref, db } = window.dbFunctions;
-    const jobId = document.getElementById('editJobId').value;
-    const updated = {
-        date: document.getElementById('txDate').value,
-        source: document.getElementById('txSource').value,
-        description: document.getElementById('txDesc').value,
-        price: document.getElementById('txAmount').value,
-        status: document.getElementById('txStatus').value,
-        type: jobs.find(j => j.id === jobId).type
-    };
-    update(ref(db, 'jobs/' + jobId), updated).then(() => {
-        showToast('Updated!', 'success');
-        window.closeTxModal();
+    Swal.fire({
+        title: 'Receive Payment?', icon: 'question', showCancelButton: true,
+        confirmButtonColor: '#10b981', cancelButtonColor: '#334155', confirmButtonText: 'Yes, Received!',
+        background: '#1e293b', color: '#fff'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            update(ref(db, 'jobs/' + id), { status: 'Paid' });
+            showToast('Status: PAID', 'success');
+        }
     });
 };
 
+// 4. දත්ත සේව් කිරීම (Toast Alert සමඟ)
 document.getElementById('jobForm').onsubmit = (e) => {
     e.preventDefault();
-    const { push } = window.dbFunctions;
+    if (!window.dbFunctions) return;
+    const { push, update, ref, db } = window.dbFunctions;
+
     const entry = {
         date: document.getElementById('dateInput').value,
         source: document.getElementById('jobSource').value,
@@ -167,40 +139,76 @@ document.getElementById('jobForm').onsubmit = (e) => {
         price: document.getElementById('jobPrice').value,
         description: document.getElementById('jobDesc').value
     };
-    push(window.dbRef, entry);
-    showToast('Transaction Added!', 'success');
+
+    if (editId) {
+        update(ref(db, 'jobs/' + editId), entry);
+        editId = null;
+        document.getElementById('formTitle').innerHTML = 'Quick Entry';
+        showToast('Transaction Updated!', 'success');
+    } else {
+        push(window.dbRef, entry);
+        showToast('Transaction Added!', 'success');
+    }
     e.target.reset();
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    setupCharts();
-    if (window.dbFunctions) {
-        window.dbFunctions.onValue(window.dbRef, (snapshot) => { updateDashboard(snapshot.val()); });
-    }
-});
-
-// Helpers
-function showToast(title, icon) { Swal.fire({ toast: true, position: 'top-end', icon: icon, title: title, showConfirmButton: false, timer: 3000, background: '#1e293b', color: '#fff' }); }
-window.deleteJob = (id) => {
-    const { remove, ref, db } = window.dbFunctions;
-    Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'jobs/' + id)); });
-};
-window.markAsPaid = (id) => {
-    const { update, ref, db } = window.dbFunctions;
-    update(ref(db, 'jobs/' + id), { status: 'Paid' });
-    showToast('Paid!', 'success');
-};
-document.getElementById('prevPage').onclick = () => { if (currentPage > 1) { currentPage--; updateDashboardFromData(); } };
-document.getElementById('nextPage').onclick = () => { if (currentPage < Math.ceil(jobs.length / rowsPerPage)) { currentPage++; updateDashboardFromData(); } };
-function updateDashboardFromData() {
-    const rawData = jobs.reduce((obj, item) => { const {id, ...rest} = item; obj[id] = rest; return obj; }, {});
-    updateDashboard(rawData);
+// Toast Helper Function
+function showToast(title, icon) {
+    Swal.fire({
+        toast: true, position: 'top-end', icon: icon, title: title,
+        showConfirmButton: false, timer: 3000, timerProgressBar: true,
+        background: '#1e293b', color: '#fff'
+    });
 }
 
+// 5. Delete Logic
+window.deleteJob = (id) => {
+    if (!window.dbFunctions) return;
+    const { remove, ref, db } = window.dbFunctions;
+    Swal.fire({ 
+        title: 'Delete this?', icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#ef4444', cancelButtonColor: '#334155', confirmButtonText: 'Yes, Delete!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            remove(ref(db, 'jobs/' + id));
+            showToast('Transaction Deleted', 'info');
+        }
+    });
+};
+
+// 6. Edit Logic
+window.editJob = (id) => {
+    const job = jobs.find(j => j.id === id);
+    document.getElementById('dateInput').value = job.date;
+    document.getElementById('jobSource').value = job.source;
+    document.getElementById('entryType').value = job.type;
+    document.getElementById('paymentStatus').value = job.status;
+    document.getElementById('jobPrice').value = job.price;
+    document.getElementById('jobDesc').value = job.description;
+    editId = id;
+    document.getElementById('formTitle').innerText = 'Edit Transaction';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// 7. Charts Setup
+function setupCharts() {
+    const pieCtx = document.getElementById('incomeSourcesChart');
+    const barCtx = document.getElementById('incomeExpensesChart');
+    if (!pieCtx || !barCtx) return;
+
+    pieChart = new Chart(pieCtx, { type: 'doughnut', data: { labels: ['Singer', 'Banks', 'Private'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#ef4444', '#3b82f6', '#10b981'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } } });
+    barChart = new Chart(barCtx, { type: 'bar', data: { labels: ['Target', 'Profit'], datasets: [{ label: 'LKR', data: [200000, 0], backgroundColor: ['#334155', '#10b981'], borderRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } } });
+}
+
+// 8. Excel Export
 document.getElementById('exportBtnSidebar').onclick = function() {
-    const excelData = jobs.map(j => ({ "Date": j.date, "Source": j.source, "Type": j.type, "Description": j.description, "Amount": j.price, "Status": j.status }));
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-    XLSX.writeFile(wb, "Thaprobaane_Report.xlsx");
+    if (jobs.length === 0) {
+        showToast('No data available to download!', 'error');
+        return;
+    }
+    const excelData = jobs.map(j => ({ "Date": j.date, "Source": j.source, "Type": j.type, "Description": j.description, "Amount": parseFloat(j.price), "Status": j.status }));
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+    XLSX.writeFile(workbook, "Thaprobaane_Report.xlsx");
 };
