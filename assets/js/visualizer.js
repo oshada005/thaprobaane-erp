@@ -1,32 +1,27 @@
 /**
- * Thaprobaane International - Furniture Visualizer
- * Final Update: Colors, Textures + Reset Functionality
+ * Thaprobaane International - Ultra Fast & Easy Visualizer
+ * No Tokens | No Permissions | Just Works!
  */
 
 const materials = [
-    { id: 'm1', name: 'Royal Velvet', hex: '#002366', style: 'brightness(0.9) saturate(1.8)' },
-    { id: 'm2', name: 'Classic Leather', hex: '#3d2b1f', style: 'contrast(1.4) brightness(0.6)' },
-    { id: 'm3', name: 'Modern Linen', hex: '#B2BEB5', style: 'contrast(0.8) brightness(1.1)' },
-    { id: 'm4', name: 'Mustard Velvet', hex: '#E1AD01', style: 'brightness(1.1) saturate(1.5)' },
-    { id: 'm5', name: 'Emerald Silk', hex: '#046307', style: 'brightness(0.8) saturate(1.4)' },
-    { id: 'm6', name: 'Charcoal Matte', hex: '#2c2c2c', style: 'grayscale(1) brightness(0.4)' }
+    { id: 'm1', name: 'Royal Velvet', hex: '#002366' },
+    { id: 'm2', name: 'Classic Leather', hex: '#3d2b1f' },
+    { id: 'm3', name: 'Modern Linen', hex: '#B2BEB5' },
+    { id: 'm4', name: 'Mustard Velvet', hex: '#E1AD01' },
+    { id: 'm5', name: 'Emerald Silk', hex: '#046307' },
+    { id: 'm6', name: 'Charcoal Matte', hex: '#2c2c2c' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
-    const sofaDisplay = document.getElementById('base-sofa');
+    // 1. Imgur Block එක Bypass කරනවා (weserv proxy එකෙන්)
+    const bodyImg = document.getElementById('layer-body');
+    const cushionImg = document.getElementById('layer-cushions');
+    if(bodyImg) bodyImg.src = "https://images.weserv.nl/?url=i.imgur.com/vhqVp90.png";
+    if(cushionImg) cushionImg.src = "https://images.weserv.nl/?url=i.imgur.com/KzU5X3X.png";
+
+    // 2. Color Buttons Create කරනවා
     const bodyContainer = document.getElementById('body-colors');
     const cushionContainer = document.getElementById('cushion-colors');
-
-    // සෝෆා එක පෙන්වීම
-    if (sofaDisplay) {
-        sofaDisplay.src = "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=1000"; 
-        sofaDisplay.onload = () => {
-            sofaDisplay.classList.remove('opacity-0');
-            sofaDisplay.classList.add('opacity-100');
-        };
-    }
-
-    // බටන්ස් නිර්මාණය
     if (bodyContainer && cushionContainer) {
         materials.forEach(mat => {
             bodyContainer.appendChild(createColorButton(mat, 'body'));
@@ -34,46 +29,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Reset Button එකට වැඩේ සෙට් කිරීම
-    const resetBtn = document.getElementById('reset-btn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', resetVisualizer);
-    }
+    document.getElementById('reset-btn').onclick = () => {
+        document.getElementById('layer-body').style.backgroundColor = 'transparent';
+        document.getElementById('layer-cushions').style.backgroundColor = 'transparent';
+    };
+
+    document.getElementById('ai-upload').onchange = (e) => {
+        if (e.target.files.length > 0) document.getElementById('upload-label').innerText = e.target.files[0].name;
+    };
+
+    document.getElementById('ai-generate-btn').onclick = generateAIRemaster;
 });
 
 function createColorButton(mat, section) {
     const btn = document.createElement('button');
-    btn.className = 'w-full aspect-square rounded-xl border-2 border-white/10 hover:border-blue-500 transition-all flex flex-col items-center justify-center p-1 bg-slate-800/40 group overflow-hidden';
-    
-    btn.innerHTML = `
-        <div class="w-full h-full rounded-lg shadow-inner mb-1" style="background-color: ${mat.hex}"></div>
-        <span class="text-[9px] text-gray-400 group-hover:text-white truncate w-full text-center px-1">${mat.name}</span>
-    `;
-    
+    btn.className = 'w-full aspect-square rounded-xl border-2 border-white/10 hover:border-blue-500 transition-all flex flex-col items-center justify-center p-1 bg-slate-800/40 group';
+    btn.innerHTML = `<div class="w-full h-full rounded-lg mb-1" style="background-color: ${mat.hex}"></div><span class="text-[8px] text-gray-500 group-hover:text-white uppercase font-bold">${mat.name.split(' ')[0]}</span>`;
     btn.onclick = () => {
-        const sofa = document.getElementById('base-sofa');
-        if (sofa) {
-            sofa.style.filter = mat.style;
-        }
+        const targetId = section === 'body' ? 'layer-body' : 'layer-cushions';
+        document.getElementById(targetId).style.backgroundColor = mat.hex;
     };
     return btn;
 }
 
-// Reset Function එක
-function resetVisualizer() {
-    const sofa = document.getElementById('base-sofa');
-    if (sofa) {
-        sofa.style.filter = 'none'; // ඔක්කොම ෆිල්ටර් අයින් කරනවා
-        console.log("Visualizer Reset to Default");
-    }
+async function generateAIRemaster() {
+    const uploadInput = document.getElementById('ai-upload');
+    const selectedMat = document.getElementById('ai-material').value;
+    const modal = document.getElementById('ai-modal');
+    const outputImg = document.getElementById('ai-output-img');
+    const loader = document.getElementById('ai-loader');
+
+    if (uploadInput.files.length === 0) return alert("Photo එකක් upload කරලා ඉඳපන් මචං!");
+
+    modal.classList.remove('hidden');
+    outputImg.classList.add('hidden');
+    loader.classList.remove('hidden');
+
+    // 3. කිසිම Token එකක් නැතිව Pollinations Turbo පාවිච්චි කරනවා
+    const seed = Math.floor(Math.random() * 1000000);
+    const prompt = `A luxury sofa in ${selectedMat} fabric, professional interior design showroom, cinematic lighting, photorealistic.`;
+    const url = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1080&height=720&seed=${seed}&model=turbo&nologo=true`;
+
+    const img = new Image();
+    img.src = url;
+    img.onload = () => {
+        outputImg.src = url;
+        loader.classList.add('hidden');
+        outputImg.classList.remove('hidden');
+        outputImg.style.opacity = '1';
+        
+        document.getElementById('download-ai-btn').onclick = () => {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Thaprobaane_AI.jpg`;
+            link.click();
+        };
+    };
+    img.onerror = () => generateAIRemaster(); // Error ආවොත් auto-retry
 }
-function applyColor(mat, section) {
-    // තෝරගත් කොටසට (Body හෝ Cushion) අදාළ ID එක ගන්නවා
-    const targetId = section === 'body' ? 'layer-body' : 'layer-cushions';
-    const element = document.getElementById(targetId);
-    
-    if (element) {
-        // රෙද්ද තියෙන තැනට විතරක් පාට ඇප්ලයි කරනවා
-        element.style.backgroundColor = mat.hex;
-    }
-}
+
+window.closeAIModal = () => document.getElementById('ai-modal').classList.add('hidden');

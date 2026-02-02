@@ -19,6 +19,9 @@
             object-fit: contain;
             transition: opacity 0.8s ease-in-out;
         }
+        .ai-glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
     </style>
 </head>
 <body class="visualizer-container text-white">
@@ -36,15 +39,10 @@
     <div class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2 space-y-6">
             <div class="relative bg-black/20 rounded-3xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center p-10" style="min-height: 500px;">
-                <div id="visualizer-stage" class="w-full flex items-center justify-center">
-                    <!-- <img id="base-sofa" src="" alt="Sofa Preview" class="opacity-0"> -->
-                     <div id="visualizer-stage" class="relative w-full h-[400px] flex items-center justify-center isolate">
-    <img id="layer-base" src="https://i.imgur.com/vHqVp9O.png" class="absolute inset-0 w-full h-full object-contain z-10">
-    
-    <img id="layer-body" src="https://i.imgur.com/vHqVp9O.png" class="absolute inset-0 w-full h-full object-contain z-20 mix-blend-multiply opacity-80" style="background-color: transparent;">
-    
-    <img id="layer-cushions" src="https://i.imgur.com/KzU5X3X.png" class="absolute inset-0 w-full h-full object-contain z-30 mix-blend-multiply opacity-80" style="background-color: transparent;">
-</div>
+                <div id="visualizer-stage" class="relative w-full h-[400px] flex items-center justify-center isolate">
+                    <img id="layer-base" src="https://i.imgur.com/vHqVp9O.png" class="absolute inset-0 w-full h-full object-contain z-10">
+                    <img id="layer-body" src="https://i.imgur.com/vHqVp9O.png" class="absolute inset-0 w-full h-full object-contain z-20 mix-blend-multiply opacity-80" style="background-color: transparent;">
+                    <img id="layer-cushions" src="https://i.imgur.com/KzU5X3X.png" class="absolute inset-0 w-full h-full object-contain z-30 mix-blend-multiply opacity-80" style="background-color: transparent;">
                 </div>
                 <div class="absolute bottom-6 right-6 flex space-x-3">
                     <button class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition"><i class="fa-solid fa-plus"></i></button>
@@ -59,26 +57,75 @@
         </div>
 
         <div class="space-y-6">
+            <div class="bg-slate-900/80 p-6 rounded-3xl border border-blue-500/30 shadow-xl ai-glow">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4 italic flex items-center">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> AI Remaster (Pollinations)
+                </h3>
+                <div class="space-y-4">
+                    <div class="relative">
+                        <input type="file" id="ai-upload" class="hidden" accept="image/*">
+                        <label for="ai-upload" class="flex items-center justify-center p-4 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-blue-500 transition group">
+                            <div class="text-center">
+                                <i class="fa-solid fa-camera text-2xl mb-2 text-gray-400 group-hover:text-blue-400"></i>
+                                <p id="upload-label" class="text-[9px] text-gray-500 uppercase font-bold">Snap or Upload Sofa</p>
+                            </div>
+                        </label>
+                    </div>
+                    <select id="ai-material" class="w-full p-3 rounded-xl text-xs bg-slate-800 text-white border border-white/5 outline-none">
+                        <option value="premium velvet fabric">Luxury Velvet</option>
+                        <option value="aged italian leather">Classic Italian Leather</option>
+                        <option value="textured nordic linen">Modern Linen</option>
+                        <option value="royal matte suede">Premium Suede</option>
+                    </select>
+                    <button id="ai-generate-btn" class="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl transition font-bold text-xs shadow-lg flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>RE-IMAGINE WITH AI</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 shadow-xl">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4 italic">Step 1: Body Color</h3>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4 italic">Body Color</h3>
                 <div class="grid grid-cols-4 gap-3" id="body-colors"></div>
             </div>
 
             <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 shadow-xl">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-4 italic">Step 2: Cushion Color</h3>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-4 italic">Cushion Color</h3>
                 <div class="grid grid-cols-4 gap-3" id="cushion-colors"></div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <button id="reset-btn" class="p-4 bg-slate-800 hover:bg-red-900/40 rounded-2xl transition font-bold text-xs border border-white/5">
-    <i class="fa-solid fa-rotate-left mb-2 block text-lg text-orange-400"></i> Reset Preview
-</button>
+                    <i class="fa-solid fa-rotate-left mb-2 block text-lg text-orange-400"></i> Reset Preview
+                </button>
                 <button class="p-4 bg-slate-800 hover:bg-slate-700 rounded-2xl transition font-bold text-xs">
-                    <i class="fa-solid fa-camera mb-2 block text-lg text-blue-400"></i> Screenshot
+                    <i class="fa-solid fa-file-invoice-dollar mb-2 block text-lg text-green-400"></i> Get Quote
                 </button>
-                <button class="p-4 bg-blue-600 hover:bg-blue-500 rounded-2xl transition font-bold text-xs">
-                    <i class="fa-solid fa-file-invoice-dollar mb-2 block text-lg"></i> Get Quote
-                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ai-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/95 backdrop-blur-md">
+        <div class="max-w-4xl w-full bg-slate-900 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl">
+            <button onclick="closeAIModal()" class="absolute top-4 right-4 text-white hover:text-red-500 text-3xl z-10 transition">&times;</button>
+            <div class="p-8 text-center">
+                <div class="mb-6">
+                    <h4 class="text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">AI Re-imagined Concept</h4>
+                    <p class="text-gray-500 text-[10px]">Powered by Pollinations AI & Thaprobaane Intl</p>
+                </div>
+                <div id="ai-result-container" class="relative rounded-2xl overflow-hidden bg-black/50 min-h-[450px] flex items-center justify-center border border-white/5">
+                    <div id="ai-loader" class="hidden flex flex-col items-center">
+                        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p class="text-sm text-blue-400 animate-pulse font-bold tracking-widest uppercase">Redesigning in progress...</p>
+                    </div>
+                    <img id="ai-output-img" src="" class="max-w-full h-auto rounded-xl shadow-2xl hidden transition-opacity duration-1000">
+                </div>
+                <div class="mt-8 flex justify-center gap-4">
+                    <button onclick="closeAIModal()" class="px-8 py-3 bg-white/5 rounded-xl text-xs font-bold hover:bg-white/10 transition uppercase tracking-widest">Close</button>
+                    <button id="download-ai-btn" class="px-8 py-3 bg-blue-600 rounded-xl text-xs font-bold hover:bg-blue-500 transition uppercase tracking-widest flex items-center">
+                        <i class="fa-solid fa-download mr-2"></i> Save Image
+                    </button>
+                </div>
             </div>
         </div>
     </div>
