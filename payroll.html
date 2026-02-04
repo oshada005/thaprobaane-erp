@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Management | Thaprobaane</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" href="assets/img/logo.png" />
+</head>
+<body class="flex flex-col lg:flex-row min-h-screen bg-[#0b0f1a]">
+    
+    <aside id="sidebar" class="sidebar sidebar-closed fixed inset-y-0 left-0 z-50 w-64 lg:sticky lg:top-0 lg:translate-x-0 lg:flex flex-col h-screen shrink-0 border-r border-white/5 bg-[#0f172a]">
+      <div class="p-6 text-center">
+        <img src="assets/img/logo.png" alt="Logo" class="w-full h-auto mb-2" />
+        <p class="text-[10px] text-blue-400 font-bold tracking-widest uppercase">
+          ERP v1.0 <br /> &copy;Thaprobaane International
+        </p>
+      </div>
+      <nav class="flex-1 px-4 space-y-2">
+        <a href="dashboard.html" class="flex items-center p-3 text-gray-400 rounded-xl hover:bg-white/5 transition text-left"><i class="fa-solid fa-house-chimney mr-3"></i> Dashboard</a>
+        <button id="exportBtnSidebar" class="w-full flex items-center p-3 text-gray-400 rounded-xl hover:bg-white/5 transition text-left"><i class="fa-solid fa-download mr-3"></i> Export Excel</button>
+        <a href="visualizer.html" class="flex items-center p-3 text-gray-400 rounded-xl hover:bg-white/5 transition text-left"><i class="fa-solid fa-chair mr-3"></i> Visualizer</a>
+        <a href="payroll.html" class="flex items-center p-3 text-blue-500 bg-blue-500/10 rounded-xl font-semibold"><i class="fa-solid fa-users-gear mr-3"></i> Payroll</a>
+      </nav>
+      <div class="p-4 border-t border-white/5">
+        <button id="logoutBtn" class="w-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white py-3 rounded-xl font-bold transition flex items-center justify-center border border-red-500/10"><i class="fa-solid fa-power-off mr-2"></i> Logout</button>
+      </div>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8 w-full min-h-screen text-gray-400 overflow-x-hidden">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-white">Payroll Management</h2>
+            <p>Manage Employees & Salaries</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="glass-card p-6 h-fit">
+                <h3 class="text-white font-bold mb-4 uppercase text-sm italic underline decoration-blue-500 underline-offset-8">Add Employee</h3>
+                <form id="employeeForm" class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Full Name</label>
+                        <input type="text" id="empName" class="w-full p-3 rounded-xl text-sm bg-slate-800 border-0 text-white" placeholder="Sunil Perera" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">WhatsApp Number</label>
+                        <div class="flex">
+                            <span class="inline-flex items-center px-3 bg-slate-700 text-gray-400 text-sm border-0 rounded-l-xl font-bold">+94</span>
+                            <input type="number" id="empPhone" class="flex-1 p-3 rounded-r-xl text-sm bg-slate-800 border-0 text-white" placeholder="771234567" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Position</label>
+                        <select id="empPosition" class="w-full p-3 rounded-xl text-sm bg-slate-800 border-0 text-white">
+                            <option value="Polisher">Polisher</option>
+                            <option value="Technical Assistant">Technical Assistant</option>
+                            <option value="Manager">Manager</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Basic Salary (LKR)</label>
+                        <input type="number" id="empSalary" class="w-full p-3 rounded-xl text-sm bg-slate-800 border-0 text-white" placeholder="0" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-lg uppercase tracking-wider">Register Employee</button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 glass-card p-6">
+                <h3 class="text-white font-bold mb-4 uppercase text-sm italic underline decoration-green-500 underline-offset-8">Generate Salary</h3>
+                <form id="salaryForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Select Employee</label>
+                        <select id="selectEmployee" class="w-full p-3 rounded-xl text-sm bg-slate-800 border-0 text-white"></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Month</label>
+                        <input type="month" id="salaryMonth" class="w-full p-3 rounded-xl text-sm bg-slate-800 border-0 text-white" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Advance / Deductions (-)</label>
+                        <input type="number" id="deductions" class="w-full p-3 rounded-xl text-sm bg-slate-800 border-0 text-white" value="0" onfocus="if(this.value=='0')this.value='';">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Bonus / Allowances (+)</label>
+                        <input type="number" id="allowances" class="w-full p-3 rounded-xl text-sm bg-slate-800 border-0 text-white" value="0" onfocus="if(this.value=='0')this.value='';">
+                    </div>
+                    <div class="md:col-span-2 flex flex-col md:flex-row justify-between items-center bg-blue-500/10 p-5 rounded-2xl border border-blue-500/20 mt-4 gap-4">
+                        <div>
+                            <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Net Payable Amount</p>
+                            <h2 id="netSalaryDisplay" class="text-3xl font-bold text-white">Rs. 0.00</h2>
+                        </div>
+                        <button type="submit" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-10 py-4 rounded-xl font-bold shadow-xl transition uppercase flex items-center justify-center">
+                            <i class="fa-solid fa-paper-plane mr-2"></i> Pay & Send Receipt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="glass-card mt-8 overflow-hidden">
+            <div class="p-5 border-b border-white/5 bg-white/5 text-white font-bold text-sm uppercase tracking-wider flex items-center">
+                <i class="fa-solid fa-address-book mr-2 text-blue-500"></i> Employee Directory
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="text-[10px] text-gray-500 uppercase bg-white/5">
+                        <tr>
+                            <th class="p-4">Name</th>
+                            <th class="p-4">WhatsApp</th>
+                            <th class="p-4">Position</th>
+                            <th class="p-4">Basic Salary</th>
+                            <th class="p-4 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="editEmpModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div class="glass-card w-full max-w-lg overflow-hidden border border-white/10 shadow-2xl">
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+          <h3 class="text-xl font-bold text-white uppercase italic">Update Employee Info</h3>
+          <button onclick="closeEditEmpModal()" class="text-gray-400 hover:text-white text-2xl transition">&times;</button>
+        </div>
+        <form id="editEmpForm" class="p-6 space-y-4">
+          <input type="hidden" id="editEmpId">
+          <div><label class="block text-[10px] font-bold text-gray-500 mb-2 uppercase">Full Name</label><input type="text" id="modalEmpName" class="w-full p-3 rounded-xl text-sm bg-slate-800 text-white border-0" required /></div>
+          <div>
+            <label class="block text-[10px] font-bold text-gray-500 mb-2 uppercase">WhatsApp Number</label>
+            <div class="flex">
+                <span class="inline-flex items-center px-3 bg-slate-700 text-gray-400 text-sm rounded-l-xl font-bold">+94</span>
+                <input type="number" id="modalEmpPhone" class="flex-1 p-3 rounded-r-xl text-sm bg-slate-800 text-white border-0" required />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-gray-500 mb-2 uppercase">Position</label>
+            <select id="modalEmpPosition" class="w-full p-3 rounded-xl text-sm bg-slate-800 text-white border-0">
+                <option value="Polisher">Polisher</option>
+                <option value="Helper">Helper</option>
+                <option value="Technical Assistant">Technical Assistant</option>
+                <option value="Manager">Manager</option>
+            </select>
+          </div>
+          <div><label class="block text-[10px] font-bold text-gray-500 mb-2 uppercase">Basic Salary (LKR)</label><input type="number" id="modalEmpSalary" class="w-full p-3 rounded-xl text-sm bg-slate-800 text-white border-0" required /></div>
+          <div class="flex gap-3 pt-4">
+            <button type="button" onclick="closeEditEmpModal()" class="flex-1 bg-slate-700 text-white py-3 rounded-xl font-bold transition">CANCEL</button>
+            <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg transition uppercase">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="assets/js/payroll.js"></script>
+</body>
+</html>
