@@ -1,7 +1,6 @@
 /**
  * Thaprobaane ERP - Monthly Isolated script
  */
-
 let jobs = [];
 let pieChart, barChart;
 let currentPage = 1;
@@ -11,19 +10,14 @@ let currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
 function updateDashboard(data) {
     let totalIncome = 0, totalExpense = 0, totalPending = 0, paidIncome = 0;
     let singer = 0, bank = 0, privateVal = 0;
-
     const tableBody = document.getElementById('jobTableBody');
     if (!tableBody) return;
     tableBody.innerHTML = '';
 
     jobs = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
-
     let filteredJobs = jobs;
     if (currentMonth !== 'all') {
-        filteredJobs = jobs.filter(job => {
-            const dateParts = job.date.split('-');
-            return dateParts[1] === currentMonth;
-        });
+        filteredJobs = jobs.filter(job => job.date.split('-')[1] === currentMonth);
     }
 
     filteredJobs.forEach((job) => {
@@ -32,13 +26,10 @@ function updateDashboard(data) {
             totalIncome += price;
             if (job.status === 'Paid') paidIncome += price;
             else totalPending += price;
-            
             if (job.source === 'Singer') singer += price;
             else if (job.source === 'Banks') bank += price;
             else privateVal += price;
-        } else {
-            totalExpense += price;
-        }
+        } else { totalExpense += price; }
     });
 
     const reversedJobs = [...filteredJobs].reverse();
@@ -74,7 +65,6 @@ function updateDashboard(data) {
     document.getElementById('totalPending').innerText = `Rs. ${totalPending.toLocaleString()}`;
     document.getElementById('netProfit').innerText = `Rs. ${netProfit.toLocaleString()}`;
     document.getElementById('jobCount').innerText = filteredJobs.length;
-
     document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
     document.getElementById('prevPage').disabled = currentPage === 1;
     document.getElementById('nextPage').disabled = (currentPage === totalPages || filteredJobs.length === 0);
@@ -83,38 +73,25 @@ function updateDashboard(data) {
     if(barChart) { barChart.data.datasets[0].data = [200000, netProfit, totalPending]; barChart.update(); }
 }
 
-// Transaction Type Change Logic (Disable Partner for Expense)
 document.addEventListener('DOMContentLoaded', () => {
     const entryType = document.getElementById('entryType');
     const jobSource = document.getElementById('jobSource');
-
     if (entryType && jobSource) {
         entryType.addEventListener('change', () => {
             if (entryType.value === 'Expense') {
-                jobSource.value = 'N/A';
-                jobSource.disabled = true;
+                jobSource.value = 'N/A'; jobSource.disabled = true;
                 jobSource.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
-                jobSource.disabled = false;
-                jobSource.value = 'Private';
+                jobSource.disabled = false; jobSource.value = 'Private';
                 jobSource.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         });
     }
 });
 
-document.getElementById('monthFilter').onchange = (e) => {
-    currentMonth = e.target.value;
-    currentPage = 1;
-    updateDashboardFromData();
-};
-
+document.getElementById('monthFilter').onchange = (e) => { currentMonth = e.target.value; currentPage = 1; updateDashboardFromData(); };
 function updateDashboardFromData() {
-    const rawData = jobs.reduce((obj, item) => {
-        const {id, ...rest} = item;
-        obj[id] = rest;
-        return obj;
-    }, {});
+    const rawData = jobs.reduce((obj, item) => { const {id, ...rest} = item; obj[id] = rest; return obj; }, {});
     updateDashboard(rawData);
 }
 
@@ -126,8 +103,7 @@ document.getElementById('nextPage').onclick = () => {
 };
 
 window.editJob = (id) => {
-    const job = jobs.find(j => j.id === id);
-    if (!job) return;
+    const job = jobs.find(j => j.id === id); if (!job) return;
     document.getElementById('editJobId').value = id;
     document.getElementById('modalDate').value = job.date;
     document.getElementById('modalSource').value = job.source;
@@ -137,34 +113,20 @@ window.editJob = (id) => {
     document.getElementById('modalDesc').value = job.description;
     document.getElementById('editModal').classList.remove('hidden');
 };
-
 window.closeEditModal = () => { document.getElementById('editModal').classList.add('hidden'); };
 
 document.getElementById('editForm').onsubmit = (e) => {
     e.preventDefault();
     const { update, ref, db } = window.dbFunctions;
     const id = document.getElementById('editJobId').value;
-    const entry = {
-        date: document.getElementById('modalDate').value,
-        source: document.getElementById('modalSource').value,
-        type: document.getElementById('modalType').value,
-        status: document.getElementById('modalStatus').value,
-        price: document.getElementById('modalPrice').value,
-        description: document.getElementById('modalDesc').value
-    };
-    update(ref(db, 'jobs/' + id), entry).then(() => {
-        closeEditModal();
-        showToast('Updated!', 'success');
-    });
+    const entry = { date: document.getElementById('modalDate').value, source: document.getElementById('modalSource').value, type: document.getElementById('modalType').value, status: document.getElementById('modalStatus').value, price: document.getElementById('modalPrice').value, description: document.getElementById('modalDesc').value };
+    update(ref(db, 'jobs/' + id), entry).then(() => { closeEditModal(); showToast('Updated!', 'success'); });
 };
 
 window.markAsPaid = (id) => {
     const { update, ref, db } = window.dbFunctions;
     Swal.fire({ title: 'Receive Payment?', icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', background: '#1e293b', color: '#fff' }).then((result) => {
-        if (result.isConfirmed) {
-            update(ref(db, 'jobs/' + id), { status: 'Paid' });
-            showToast('PAID', 'success');
-        }
+        if (result.isConfirmed) { update(ref(db, 'jobs/' + id), { status: 'Paid' }); showToast('PAID', 'success'); }
     });
 };
 
@@ -172,40 +134,23 @@ document.getElementById('jobForm').onsubmit = (e) => {
     e.preventDefault();
     const { push } = window.dbFunctions;
     const jobSource = document.getElementById('jobSource');
-    const entry = {
-        date: document.getElementById('dateInput').value,
-        source: jobSource.value,
-        type: document.getElementById('entryType').value,
-        status: document.getElementById('paymentStatus').value,
-        price: document.getElementById('jobPrice').value,
-        description: document.getElementById('jobDesc').value
-    };
+    const entry = { date: document.getElementById('dateInput').value, source: jobSource.value, type: document.getElementById('entryType').value, status: document.getElementById('paymentStatus').value, price: document.getElementById('jobPrice').value, description: document.getElementById('jobDesc').value };
     push(window.dbRef, entry);
     showToast('Success!', 'success');
-    e.target.reset();
-    document.getElementById('dateInput').valueAsDate = new Date();
-    // Reset partner field state
-    jobSource.disabled = false;
-    jobSource.classList.remove('opacity-50', 'cursor-not-allowed');
+    e.target.reset(); document.getElementById('dateInput').valueAsDate = new Date();
+    jobSource.disabled = false; jobSource.classList.remove('opacity-50', 'cursor-not-allowed');
 };
 
 window.deleteJob = (id) => {
     const { remove, ref, db } = window.dbFunctions;
     Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => {
-        if (result.isConfirmed) {
-            remove(ref(db, 'jobs/' + id));
-            showToast('Deleted!', 'info');
-        }
+        if (result.isConfirmed) { remove(ref(db, 'jobs/' + id)); showToast('Deleted!', 'info'); }
     });
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     setupCharts();
-    if (window.dbFunctions) {
-        window.dbFunctions.onValue(window.dbRef, (snapshot) => {
-            updateDashboard(snapshot.val());
-        });
-    }
+    if (window.dbFunctions) { window.dbFunctions.onValue(window.dbRef, (snapshot) => { updateDashboard(snapshot.val()); }); }
 });
 
 function setupCharts() {
@@ -216,9 +161,7 @@ function setupCharts() {
     barChart = new Chart(barCtx, { type: 'bar', data: { labels: ['Target', 'Profit', 'Pending'], datasets: [{ label: 'LKR', data: [200000, 0, 0], backgroundColor: ['#334155', '#10b981', '#facc15'], borderRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } } });
 }
 
-function showToast(title, icon) {
-    Swal.fire({ toast: true, position: 'top-end', icon: icon, title: title, showConfirmButton: false, timer: 3000, background: '#1e293b', color: '#fff' });
-}
+function showToast(title, icon) { Swal.fire({ toast: true, position: 'top-end', icon: icon, title: title, showConfirmButton: false, timer: 3000, background: '#1e293b', color: '#fff' }); }
 
 document.getElementById('exportBtnSidebar').onclick = function() {
     const excelData = jobs.filter(j => currentMonth === 'all' || j.date.split('-')[1] === currentMonth).map(j => ({ "Date": j.date, "Source": j.source, "Type": j.type, "Description": j.description, "Amount": parseFloat(j.price), "Status": j.status }));
